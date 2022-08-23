@@ -39,30 +39,49 @@ export default {
       answer: "",
       operatorClicked: true,
       history: [],
+      forthHistory: []
     };
   },
   computed: {
-    expression(){
+    expression() {
       return this.fullLog.join(" ")
     },
     fullLog() {
-      return[...this.logList, ...this.current]
+      return [...this.logList, ...this.current]
     }
   },
   methods: {
-    back(){
+    back() {
       this.animateOperator("back");
       this.operatorClicked = false
-      if(this.current.length){ this.current.pop()
-      } else this.logList.pop()
-    },
-    forth(){
-      this.animateOperator("forth");
-      if(this.fullLog.length < this.history.length) {
-        this.operatorClicked = false
-        let length = this.fullLog.length
-        this.logList.push(this.history[length])
+      if (this.history.length > 1) {
+        this.current = []
+        this.answer = this.history[this.history.length - 2].result
+        this.logList = this.history[this.history.length - 2].log
+        this.forthHistory.push(this.history[this.history.length - 1])
+        this.history.pop()
       }
+      // if (this.current.length) {
+      //   this.current.pop()
+      // } else this.logList.pop()
+    },
+    forth() {
+      this.animateOperator("forth");
+      if (this.forthHistory.length) {
+        this.current = []
+        const history = this.forthHistory[this.forthHistory.length - 1]
+        this.answer = history.result
+        this.logList = history.log
+        this.history.push(history)
+        this.forthHistory.pop()
+      }
+
+
+      // if (this.fullLog.length < this.history.length) {
+      //   this.operatorClicked = false
+      //   let length = this.fullLog.length
+      //   this.logList.push(this.history[length])
+      // }
     },
     append(number) {
       if (this.operatorClicked) {
@@ -71,7 +90,7 @@ export default {
       }
       this.animateNumber(`n${number}`);
       this.current = [(`${this.current}${number}`)];
-      this.history = this.fullLog
+      // this.history = this.fullLog
     },
     addtoLog(operator) {
       if (this.operatorClicked == false) {
@@ -79,7 +98,7 @@ export default {
         this.logList.push(operator);
         this.current = [];
         this.operatorClicked = true;
-        this.history = [...this.logList]
+        // this.history = [...this.logList]
       }
     },
     clear() {
@@ -109,7 +128,11 @@ export default {
             if (resp.message) {
               console.warn(resp.message)
               this.answer = "Error!"
-            } else this.answer = resp.data.result
+            } else {
+              this.forthHistory = []
+              this.history.push({result: resp.data.result, log: this.fullLog})
+              this.answer = resp.data.result
+            }
           })
         } else {
           this.answer = "Not correct!";
